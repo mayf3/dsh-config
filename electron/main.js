@@ -258,9 +258,11 @@ function registerNotifierIpc() {
     }
   })
   ipcMain.on('dsh:notifier-open', (_event, id) => {
-    // 点击条目：收起通知窗、移除该条（视为已处理），把主窗口带到前台。
+    // 点击条目：收起通知窗、移除该条（视为已处理），把主窗口带到前台，
+    // 并深链到对应会话（dsh:open-session 由页面插件打开该会话）。
     const index = doneTasks.findIndex(t => t.id === id)
-    if (index !== -1) doneTasks.splice(index, 1)
+    const entry = index !== -1 ? doneTasks[index] : undefined
+    if (entry !== undefined) doneTasks.splice(index, 1)
     ensureNotifier().hide()
     if (mainWindow !== null && !mainWindow.isDestroyed()) {
       if (mainWindow.isMinimized()) mainWindow.restore()
@@ -268,6 +270,9 @@ function registerNotifierIpc() {
       // macOS: 通知窗不参与焦点时应用可能未激活，先激活应用再聚焦主窗。
       if (process.platform === 'darwin') app.focus({ steal: true })
       mainWindow.focus()
+      if (entry !== undefined && entry.sessionId !== '') {
+        mainWindow.webContents.send('dsh:open-session', entry.sessionId)
+      }
     }
   })
 }

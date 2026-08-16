@@ -449,6 +449,161 @@ window.__ModuleLoader__.load({
 			};
 		})();
 
+		// Shared pet-gesture hijack (both the legacy details-column panel and
+		// the BetterSidebar tab mount the same wiring with per-component React
+		// state). The deepseek-pet plugin tracks its own drag origin in React
+		// state, which our roam/dock moves never update — the first grab after
+		// a roam would jump to the stale origin. A grab that starts on the pet
+		// is therefore taken over at the document CAPTURE phase: stopPropagation
+		// keeps the pet's own pointer handlers from observing the gesture (their
+		// state writes would fight our var/transform updates), we track the
+		// position ourselves, and hand the final position back through
+		// --pet-drag-* plus the pet's persisted position key.
+		const PET_POS_KEY = "deepseek-pet:position";
+		function installPetGesture({ setDockHover, setDocked, dockedRef }) {
+			const panelEl = () => document.querySelector(".dsh-side-panel");
+			const petEl = () => document.querySelector("[data-dsh-live2d-root]");
+			const overlaps = () => {
+				const p = panelEl(), k = petEl();
+				if (p === null || k === null) return false;
+				const pr = p.getBoundingClientRect(), kr = k.getBoundingClientRect();
+				return kr.left < pr.right && kr.right > pr.left && kr.top < pr.bottom && kr.bottom > pr.top;
+			};
+			const savePos = (x, y) => {
+				try { window.localStorage?.setItem(PET_POS_KEY, JSON.stringify({ x, y })); } catch { /* storage unavailable */ }
+			};
+			const gesture = { active: false, pointerId: -1, startX: 0, startY: 0, baseX: 0, baseY: 0, moved: false };
+			const leaveNest = (k) => {
+				k.classList.remove("dsh-pet-docked");
+				const nest = document.querySelector(".dsh-pet-nest");
+				if (nest !== null) nest.style.height = "";
+				if (dockedRef.v) {
+					dockedRef.v = false;
+					setDocked(false);
+				}
+			};
+			const onDown = (e) => {
+				const k = petEl();
+				if (k === null || !k.contains(e.target)) return;
+				// Capture-phase takeover: the pet's own pointer handlers must
+				// never observe this gesture (their stale-origin writes would
+				// fight our position updates).
+				e.stopPropagation();
+				gesture.active = true;
+				gesture.pointerId = e.pointerId;
+				gesture.startX = e.clientX;
+				gesture.startY = e.clientY;
+				gesture.moved = false;
+				const m = new DOMMatrix(getComputedStyle(k).transform);
+				gesture.baseX = m.m41;
+				gesture.baseY = m.m42;
+				roamState.enabled = false;
+				roamState.suppressUntil = Date.now() + ROAM_COOLDOWN;
+				leaveNest(k);
+			};
+			const onMove = (e) => {
+				if (!gesture.active || e.pointerId !== gesture.pointerId) return;
+				e.stopPropagation();
+				const dx = e.clientX - gesture.startX;
+				const dy = e.clientY - gesture.startY;
+				if (Math.hypot(dx, dy) > 4) gesture.moved = true;
+				if (gesture.moved) {
+					const k = petEl();
+					if (k !== null) {
+						k.style.setProperty("--pet-drag-x", `${gesture.baseX + dx}px`);
+						k.style.setProperty("--pet-drag-y", `${gesture.baseY + dy}px`);
+						k.style.transform = "";
+					}
+				}
+				const ov = overlaps();
+				setDockHover(ov);
+				setDocked(d => d && ov);
+			};
+			const finalize = (e, cancelled) => {
+				if (!gesture.active || e.pointerId !== gesture.pointerId) return;
+				e.stopPropagation();
+				const wasMoved = gesture.moved;
+				gesture.active = false;
+				// A press-and-release on the pet without dragging is a pat: +1 XP.
+				if (!wasMoved) petProgress.pat();
+				roamState.enabled = true;
+				roamState.suppressUntil = Date.now() + ROAM_COOLDOWN;
+				setDockHover(false);
+				// Expanding/collapsing scales the pet around its bottom-right
+				// corner, so a double-click can shove most of it off-screen.
+				// A delayed check after the release brings it back in view
+				// (this runs after deepseek-pet's own dblclick handler).
+				window.setTimeout(() => {
+					const k2 = petEl();
+					if (k2 === null) return;
+					const kr = k2.getBoundingClientRect();
+					const margin = 16;
+					if (kr.top < margin || kr.left < margin || kr.bottom > window.innerHeight - margin || kr.right > window.innerWidth - margin) {
+						const m2 = new DOMMatrix(getComputedStyle(k2).transform);
+						const lx = kr.left - m2.m41;
+						const ly = kr.top - m2.m42;
+						const tx = 520 + kr.width / 2 - lx;
+						const ty = 280 + kr.height / 2 - ly;
+						k2.style.transition = "transform .5s ease";
+						k2.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
+						window.setTimeout(() => { k2.style.transition = ""; }, 600);
+					}
+				}, 350);
+				if (!wasMoved || cancelled || !overlaps()) {
+					// Persist the final position so the pet's plugin (which
+					// re-reads it on mount) agrees with where we left it.
+					const k = petEl();
+					if (k !== null && wasMoved) {
+						const m = new DOMMatrix(getComputedStyle(k).transform);
+						savePos(m.m41, m.m42);
+					}
+					return;
+				}
+				const p = panelEl(), k = petEl();
+				if (p === null || k === null) return;
+				const pr = p.getBoundingClientRect(), kr = k.getBoundingClientRect();
+				// Dock into the nest center (112px above the panel foot). The
+				// large mode switches to the horizontal in-nest layout (pet
+				// left, speech right) with no transform scaling; the minimized
+				// pet stays as-is.
+				const minimized = k.getAttribute("data-collapsed") === "true";
+				const m = new DOMMatrix(getComputedStyle(k).transform);
+				const dkr = k.getBoundingClientRect();
+				const layoutRight = dkr.right - m.m41;
+				const layoutBottom = dkr.bottom - m.m42;
+				const x = pr.left + pr.width / 2 + dkr.width / 2 - layoutRight;
+				const nest = document.querySelector(".dsh-pet-nest");
+				let y;
+				if (minimized) {
+					y = pr.bottom - 40 + dkr.height / 2 - layoutBottom;
+					k.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+					if (nest !== null) nest.style.height = "";
+				} else {
+					k.classList.add("dsh-pet-docked");
+					y = pr.bottom - 24 - layoutBottom;
+					k.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+					if (nest !== null) nest.style.height = `${Math.min(dkr.height + 24, 164)}px`;
+				}
+				k.style.transition = "transform .55s cubic-bezier(.2,.8,.25,1.2)";
+				window.setTimeout(() => { k.style.transition = ""; }, 650);
+				dockedRef.v = true;
+				setDocked(true);
+				savePos(x, y);
+			};
+			const onUp = (e) => finalize(e, false);
+			const onCancel = (e) => finalize(e, true);
+			document.addEventListener("pointerdown", onDown, true);
+			document.addEventListener("pointermove", onMove, true);
+			document.addEventListener("pointerup", onUp, true);
+			document.addEventListener("pointercancel", onCancel, true);
+			return () => {
+				document.removeEventListener("pointerdown", onDown, true);
+				document.removeEventListener("pointermove", onMove, true);
+				document.removeEventListener("pointerup", onUp, true);
+				document.removeEventListener("pointercancel", onCancel, true);
+			};
+		}
+
 		// Boot self-heal: a drag position that clearly falls outside the viewport
 		// (the pet would be invisible and unclickable) is reset to the default
 		// spot; ordinary positions are left untouched.
@@ -596,134 +751,13 @@ window.__ModuleLoader__.load({
 
 			// Pet dock: when the deepseek-pet is genuinely dragged (moved more than a
 			// few px) over/into this panel, glide it into a nest at the panel foot.
+			// Dragging itself is the capture-phase gesture hijack (installPetGesture):
+			// the pet's own handlers keep working for hover/clicks, but a grab never
+			// fights our roam/dock transforms.
 			const [dockHover, setDockHover] = React.useState(false);
 			const [docked, setDocked] = React.useState(false);
-			const dragRef = React.useState({ down: false, x: 0, y: 0, moved: false })[0];
 			const dockedRef = React.useState({ v: false })[0];
-			React.useEffect(() => {
-				const panelEl = () => document.querySelector(".dsh-side-panel");
-				const petEl = () => document.querySelector("[data-dsh-live2d-root]");
-				const overlaps = () => {
-					const p = panelEl(), k = petEl();
-					if (p === null || k === null) return false;
-					const pr = p.getBoundingClientRect(), kr = k.getBoundingClientRect();
-					return kr.left < pr.right && kr.right > pr.left && kr.top < pr.bottom && kr.bottom > pr.top;
-				};
-				const onDown = (e) => {
-					const k = petEl();
-					if (k !== null && k.contains(e.target)) {
-						dragRef.down = true;
-						dragRef.x = e.clientX;
-						dragRef.y = e.clientY;
-						dragRef.moved = false;
-					roamState.enabled = false;
-					roamState.suppressUntil = Date.now() + ROAM_COOLDOWN;
-						// Leaving the nest: drop the inline transform so the pet's own
-						// variable-driven positioning takes over again, and restore the
-						// original stacked layout and collapsed nest height.
-						// Hand the current (possibly roaming) position to the pet's own
-						// variables so grabbing it never jumps back to an old spot.
-						const m = new DOMMatrix(getComputedStyle(k).transform);
-						k.style.setProperty("--pet-drag-x", `${m.m41}px`);
-						k.style.setProperty("--pet-drag-y", `${m.m42}px`);
-						k.style.transform = "";
-						k.style.transition = "";
-						k.classList.remove("dsh-pet-docked");
-						const nest = document.querySelector(".dsh-pet-nest");
-						if (nest !== null) nest.style.height = "";
-						if (dockedRef.v) {
-							dockedRef.v = false;
-							setDocked(false);
-						}
-					}
-				};
-				const onMove = (e) => {
-					if (dragRef.down && !dragRef.moved) {
-						if (Math.hypot(e.clientX - dragRef.x, e.clientY - dragRef.y) > 6) dragRef.moved = true;
-					}
-					const ov = overlaps();
-					setDockHover(ov && dragRef.down);
-					setDocked(d => d && ov);
-				};
-				const onUp = () => {
-					const wasDown = dragRef.down;
-					const wasMoved = dragRef.moved;
-					dragRef.down = false;
-					// A press-and-release on the pet without dragging is a pat: +1 XP.
-					if (wasDown && !wasMoved) petProgress.pat();
-					// Only a release that follows a press ON the pet (dragRef.down)
-					// touches the roam cooldown; arbitrary page clicks elsewhere
-					// must never keep parking the pet (they used to refresh the
-					// 60s cooldown forever while the user was active).
-					if (wasDown) {
-						roamState.enabled = true;
-						roamState.suppressUntil = Date.now() + ROAM_COOLDOWN;
-					}
-					setDockHover(false);
-					if (!wasDown) return;
-					// Expanding/collapsing scales the pet around its bottom-right
-					// corner, so a double-click can shove most of it off-screen.
-					// A delayed check after the release brings it back in view
-					// (this runs after deepseek-pet's own dblclick handler).
-					window.setTimeout(() => {
-						const k2 = petEl();
-						if (k2 === null) return;
-						const kr = k2.getBoundingClientRect();
-						const margin = 16;
-						if (kr.top < margin || kr.left < margin || kr.bottom > window.innerHeight - margin || kr.right > window.innerWidth - margin) {
-							const m2 = new DOMMatrix(getComputedStyle(k2).transform);
-							const lx = kr.left - m2.m41;
-							const ly = kr.top - m2.m42;
-							const tx = 520 + kr.width / 2 - lx;
-							const ty = 280 + kr.height / 2 - ly;
-							k2.style.transition = "transform .5s ease";
-							k2.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
-							window.setTimeout(() => { k2.style.transition = ""; }, 600);
-						}
-					}, 350);
-					if (!wasMoved) return;
-					if (!overlaps()) return;
-					const p = panelEl(), k = petEl();
-					if (p === null || k === null) return;
-					const pr = p.getBoundingClientRect(), kr = k.getBoundingClientRect();
-					// Dock into the nest center (112px above the panel foot). The large
-					// mode switches to the horizontal in-nest layout (pet left, speech
-					// right) with no transform scaling; the minimized pet stays as-is.
-					const minimized = k.getAttribute("data-collapsed") === "true";
-					const m = new DOMMatrix(getComputedStyle(k).transform);
-					const dkr = k.getBoundingClientRect();
-					const layoutRight = dkr.right - m.m41;
-					const layoutBottom = dkr.bottom - m.m42;
-					const x = pr.left + pr.width / 2 + dkr.width / 2 - layoutRight;
-					const nest = document.querySelector(".dsh-pet-nest");
-					if (minimized) {
-						// The tiny pet sits on the collapsed 56px nest; nothing expands.
-						const y = pr.bottom - 40 + dkr.height / 2 - layoutBottom;
-						k.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-						if (nest !== null) nest.style.height = "";
-					} else {
-						// Large mode switches to the horizontal layout and the nest
-						// expands to the pet's height plus breathing room; with the
-						// nest center tracking the pet center, the offset cancels out.
-						k.classList.add("dsh-pet-docked");
-						const y = pr.bottom - 24 - layoutBottom;
-						k.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-						if (nest !== null) nest.style.height = `${Math.min(dkr.height + 24, 164)}px`;
-					}
-					k.style.transition = "transform .55s cubic-bezier(.2,.8,.25,1.2)";
-					window.setTimeout(() => { k.style.transition = ""; }, 650);
-					dockedRef.v = true;
-					setDocked(true);
-				};
-				document.addEventListener("pointerdown", onDown);
-				document.addEventListener("pointermove", onMove);
-				document.addEventListener("pointerup", onUp);
-				return () => {
-					document.removeEventListener("pointerdown", onDown);
-					document.removeEventListener("pointermove", onMove);
-					document.removeEventListener("pointerup", onUp);
-				};
-			}, []);
+			React.useEffect(() => installPetGesture({ setDockHover, setDocked, dockedRef }), []);
 
 			const closeBtn = React.createElement("button", {
 				type: "button",
@@ -799,91 +833,12 @@ window.__ModuleLoader__.load({
 			}, [sessionId, props.visible]);
 
 			// Pet nest + drag-to-dock (mirrors the details column): dragging
-			// the deepseek-pet over the panel foot nests it in place.
+			// the deepseek-pet over the panel foot nests it in place. Dragging
+			// itself is the capture-phase gesture hijack (installPetGesture).
 			const [dockHover, setDockHover] = React.useState(false);
 			const [docked, setDocked] = React.useState(false);
-			const dragRef = React.useState({ down: false, x: 0, y: 0, moved: false })[0];
 			const dockedRef = React.useState({ v: false })[0];
-			React.useEffect(() => {
-				const panelEl = () => document.querySelector(".dsh-side-panel");
-				const petEl = () => document.querySelector("[data-dsh-live2d-root]");
-				const overlaps = () => {
-					const p = panelEl(), k = petEl();
-					if (p === null || k === null) return false;
-					const pr = p.getBoundingClientRect(), kr = k.getBoundingClientRect();
-					return kr.left < pr.right && kr.right > pr.left && kr.top < pr.bottom && kr.bottom > pr.top;
-				};
-				const onDown = (e) => {
-					const k = petEl();
-					if (k !== null && k.contains(e.target)) {
-						dragRef.down = true;
-						dragRef.x = e.clientX;
-						dragRef.y = e.clientY;
-						dragRef.moved = false;
-						const m = new DOMMatrix(getComputedStyle(k).transform);
-						k.style.setProperty("--pet-drag-x", `${m.m41}px`);
-						k.style.setProperty("--pet-drag-y", `${m.m42}px`);
-						k.style.transform = "";
-						k.style.transition = "";
-						k.classList.remove("dsh-pet-docked");
-						const nest = document.querySelector(".dsh-pet-nest");
-						if (nest !== null) nest.style.height = "";
-						if (dockedRef.v) {
-							dockedRef.v = false;
-							setDocked(false);
-						}
-					}
-				};
-				const onMove = (e) => {
-					if (dragRef.down && !dragRef.moved) {
-						if (Math.hypot(e.clientX - dragRef.x, e.clientY - dragRef.y) > 6) dragRef.moved = true;
-					}
-					const ov = overlaps();
-					setDockHover(ov && dragRef.down);
-					setDocked(d => d && ov);
-				};
-				const onUp = () => {
-					const wasDown = dragRef.down;
-					const wasMoved = dragRef.moved;
-					dragRef.down = false;
-					// A press-and-release on the pet without dragging is a pat: +1 XP.
-					if (wasDown && !wasMoved) petProgress.pat();
-					setDockHover(false);
-					if (!wasDown || !wasMoved || !overlaps()) return;
-					const p = panelEl(), k = petEl();
-					if (p === null || k === null) return;
-					const pr = p.getBoundingClientRect(), kr = k.getBoundingClientRect();
-					const minimized = k.getAttribute("data-collapsed") === "true";
-					const m = new DOMMatrix(getComputedStyle(k).transform);
-					const dkr = k.getBoundingClientRect();
-					const layoutRight = dkr.right - m.m41;
-					const layoutBottom = dkr.bottom - m.m42;
-					const x = pr.left + pr.width / 2 + dkr.width / 2 - layoutRight;
-					const nest = document.querySelector(".dsh-pet-nest");
-					if (minimized) {
-						const y = pr.bottom - 40 + dkr.height / 2 - layoutBottom;
-						k.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-						if (nest !== null) nest.style.height = "";
-					} else {
-						k.classList.add("dsh-pet-docked");
-						const y = pr.bottom - 24 - layoutBottom;
-						k.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-						if (nest !== null) nest.style.height = `${Math.min(dkr.height + 24, 164)}px`;
-					}
-					k.style.transition = "transform .55s cubic-bezier(.2,.8,.25,1.2)";
-					window.setTimeout(() => { k.style.transition = ""; }, 650);
-					dockedRef.v = true;
-					setDocked(true);
-				};
-				document.addEventListener("pointerdown", onDown);
-				document.addEventListener("pointermove", onMove);
-				document.addEventListener("pointerup", onUp);
-				return () => {
-					document.removeEventListener("pointerdown", onDown);
-					document.removeEventListener("pointermove", onMove);
-					document.removeEventListener("pointerup", onUp);
-				};
-			}, []);
+			React.useEffect(() => installPetGesture({ setDockHover, setDocked, dockedRef }), []);
 
 			return React.createElement("aside", { className: "dsh-side-panel" },
 				React.createElement("div", { className: "dsh-side-header" },
@@ -976,6 +931,17 @@ window.__ModuleLoader__.load({
 			const off = list.subscribe(check);
 			return off;
 		}, "ui-side-panel: session notifier");
+
+			// Electron deep-link: clicking a notifier entry opens that session
+			// here (the shell forwards dsh:open-session after focusing the
+			// main window).
+		ctx.effect(() => {
+			if (typeof window === "undefined" || typeof window.dshApp?.onOpenSession !== "function") return () => {};
+			return window.dshApp.onOpenSession((sessionId) => {
+				const sessions = ctx.get("sessions");
+				if (typeof sessionId === "string" && sessions !== undefined) sessions.open(sessionId);
+			});
+		}, "ui-side-panel: notifier open-session");
 
 			// Background rotation: cycle through the downloaded wallpapers.
 		ctx.effect(() => {
