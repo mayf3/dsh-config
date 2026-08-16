@@ -756,40 +756,35 @@ window.__ModuleLoader__.load({
 				return dispose;
 			}, "ui-side-panel: better-sidebar tab");
 
-			// Task-done notifier: watch every session's todos and report newly
-			// completed tasks to the Electron shell (window.dshApp), which shows
-			// an always-on-top card in the top-right corner. The first pass only
-			// builds the baseline so already-completed history never re-fires.
+			// Session-done notifier: watch every session's running flag and report
+			// sessions that finish running to the Electron shell (window.dshApp),
+			// which shows an always-on-top card in the top-right corner. The
+			// first pass only builds the baseline so already-finished sessions
+			// never re-fire.
 		ctx.effect(() => {
 			const list = ctx.get("sessions")?.list;
 			if (list === undefined) return () => {};
-			const notified = new Set();
-			let prev = new Map();
+			const prev = new Map();
 			let baseline = false;
 			const check = () => {
 				const snapshot = list.getSnapshot();
 				for (const [id, row] of Object.entries(snapshot.byId)) {
-					const todos = Array.isArray(row?.projectionValues?.todos) ? row.projectionValues.todos : [];
-					const done = new Set(todos.filter(t => t.status === "completed").map(t => t.content));
-					const before = prev.get(id) ?? new Set();
-					if (baseline) {
-						for (const content of done) {
-							if (before.has(content) || notified.has(id + "\u0000" + content)) continue;
-							notified.add(id + "\u0000" + content);
-							const payload = { sessionId: id, sessionTitle: row.displayTitle, task: content, at: Date.now() };
-							if (typeof window !== "undefined" && typeof window.dshApp?.notifyTaskDone === "function") {
-								window.dshApp.notifyTaskDone(payload);
-							}
-						}
+					const running = row?.running === true;
+					const wasRunning = prev.get(id) === true;
+					prev.set(id, running);
+					if (!baseline || !wasRunning || running) continue;
+					const title = row?.displayTitle ?? "会话";
+					const payload = { sessionId: id, sessionTitle: title, task: `会话完成：${title}`, at: Date.now() };
+					if (typeof window !== "undefined" && typeof window.dshApp?.notifyTaskDone === "function") {
+						window.dshApp.notifyTaskDone(payload);
 					}
-					prev.set(id, done);
 				}
 			};
 			check();
 			baseline = true;
 			const off = list.subscribe(check);
 			return off;
-		}, "ui-side-panel: task-done notifier");
+		}, "ui-side-panel: session-done notifier");
 
 			// Background rotation: cycle through the downloaded wallpapers.
 		ctx.effect(() => {
