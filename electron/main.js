@@ -7,8 +7,10 @@ const { app, BrowserWindow, shell, dialog, nativeImage } = require('electron')
 const path = require('path')
 
 const DSH_URL = process.env.DSH_URL || 'http://127.0.0.1:3080'
-// Web 页面的 favicon（与浏览器标签页一致的图标），用于 Dock / 窗口。
+// 窗口 favicon 与浏览器标签页一致；Dock 用 1024 高清版（白色 logo，
+// 深色 Dock 上清晰可见），回退到 favicon.png。
 const ICON_PATH = path.join(__dirname, 'assets', 'favicon.png')
+const DOCK_ICON_PATH = path.join(__dirname, 'assets', 'favicon-1024.png')
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -53,9 +55,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // macOS Dock 图标：使用 web 页面的 favicon（与浏览器标签页一致）。
+  // macOS Dock 图标：1024 高清版（生成自 web 页面的 favicon.svg）。
   if (process.platform === 'darwin') {
-    const icon = nativeImage.createFromPath(ICON_PATH)
+    const icon = nativeImage.createFromPath(DOCK_ICON_PATH)
     if (!icon.isEmpty()) app.dock.setIcon(icon)
   }
   createWindow()

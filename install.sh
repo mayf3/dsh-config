@@ -18,7 +18,8 @@ mkdir -p "$DSH_HOME/profiles/node_modules/@dsh-user"
 rm -rf "$DSH_HOME/profiles/node_modules/@dsh-user/ui-side-panel"
 cp -R "$REPO/plugins/ui-side-panel" "$DSH_HOME/profiles/node_modules/@dsh-user/ui-side-panel"
 
-echo "==> 3/5 settings.yaml"
+echo "==> 3/5 settings.yaml（覆盖前备份 .bak）"
+if [[ -f "$DSH_HOME/settings.yaml" ]]; then cp "$DSH_HOME/settings.yaml" "$DSH_HOME/settings.yaml.bak-$(date +%Y%m%d-%H%M%S)"; fi
 cp "$REPO/settings/settings.yaml" "$DSH_HOME/settings.yaml"
 
 echo "==> 4/5 cordis-smart 预设"
