@@ -1,0 +1,13 @@
+{
+  "name": "dsh-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DeepSeek Harness Web GUI 的 macOS 原生壳（Electron），解决 Chrome PWA 应用窗口的中文输入法问题",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^43.4.0"
+  }
+}

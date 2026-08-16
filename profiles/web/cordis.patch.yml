@@ -1,0 +1,9 @@
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+
+# 右侧面板插件（任务清单 + 会话详情），包位于
+# $DSH_HOME/profiles/node_modules/@dsh-user/ui-side-panel/
+- insert:
+    - id: ui-side-panel
+      name: '@dsh-user/ui-side-panel'

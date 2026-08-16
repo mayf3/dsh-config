@@ -1,0 +1,19 @@
+{
+  "name": "@dsh-user/ui-side-panel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DeepSeek Harness Web GUI 右侧面板：任务清单 + 会话详情（耗时分位数统计、token 用量、上下文占用）。持久化版本，随 dsh web 启动自动加载。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  }
+}

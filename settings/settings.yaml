@@ -1,0 +1,20 @@
+ui-onboarding:
+  welcomeNoticeVersion: 2026-08-13.1
+llm-pi-ai:
+  providers:
+    opencode-go:
+      apiKeyEnv: OPENCODE_GO_API_KEY
+    oc-go:
+      displayName: oc-go
+      apiKeyEnv: OC_GO_API_KEY
+      api: openai-completions
+      baseURL: https://opencode.ai/zen/go/v1
+      models:
+        - id: deepseek-v4-flash
+agent-default-model:
+  provider: oc-go
+  model: deepseek-v4-flash
+agent-presets:
+  default: cordis-smart
+permission:
+  defaultPreset: danger-full-access
