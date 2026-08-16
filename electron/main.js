@@ -271,7 +271,15 @@ function registerNotifierIpc() {
       if (process.platform === 'darwin') app.focus({ steal: true })
       mainWindow.focus()
       if (entry !== undefined && entry.sessionId !== '') {
-        mainWindow.webContents.send('dsh:open-session', entry.sessionId)
+        // Deep-link the session once the page can receive it: a click during
+        // the initial load must not lose the message (send before load ends
+        // is dropped).
+        const send = () => mainWindow.webContents.send('dsh:open-session', entry.sessionId)
+        if (mainWindow.webContents.isLoading()) {
+          mainWindow.webContents.once('did-finish-load', send)
+        } else {
+          send()
+        }
       }
     }
   })

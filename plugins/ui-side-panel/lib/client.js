@@ -604,15 +604,12 @@ window.__ModuleLoader__.load({
 			};
 		}
 
-		// Boot self-heal: a drag position that clearly falls outside the viewport
-		// (the pet would be invisible and unclickable) is reset to the default
-		// spot; ordinary positions are left untouched.
+		// Roaming is off (2026-08-17): the pet rests at its default bottom-right
+		// spot. Forget any persisted position so it starts there (dragging still
+		// works for the current page; the spot resets on the next reload).
 		try {
-			const petPos = JSON.parse(window.localStorage?.getItem("deepseek-pet:position") || "null");
-			if (petPos !== null && (Math.abs(petPos.x) > window.innerWidth * 2 || Math.abs(petPos.y) > window.innerHeight * 2)) {
-				window.localStorage?.removeItem("deepseek-pet:position");
-			}
-		} catch { /* malformed storage is ignored */ }
+			window.localStorage?.removeItem("deepseek-pet:position");
+		} catch { /* storage unavailable */ }
 
 
 		// Pure body assembly shared by the details-column SidePanel and the
@@ -906,6 +903,9 @@ window.__ModuleLoader__.load({
 			const check = () => {
 				const snapshot = list.getSnapshot();
 				for (const [id, row] of Object.entries(snapshot.byId)) {
+					// Subagent/background sessions run on behalf of a parent;
+					// their completions must not pop the notifier.
+					if (row?.origin === "subagent") continue;
 					const running = row?.running === true;
 					const waiting = row?.pendingInteraction;
 					const before = prev.get(id) ?? {};
@@ -937,10 +937,11 @@ window.__ModuleLoader__.load({
 			// main window).
 		ctx.effect(() => {
 			if (typeof window === "undefined" || typeof window.dshApp?.onOpenSession !== "function") return () => {};
-			return window.dshApp.onOpenSession((sessionId) => {
+			window.dshApp.onOpenSession((sessionId) => {
 				const sessions = ctx.get("sessions");
 				if (typeof sessionId === "string" && sessions !== undefined) sessions.open(sessionId);
 			});
+			return () => {};
 		}, "ui-side-panel: notifier open-session");
 
 			// Background rotation: cycle through the downloaded wallpapers.
@@ -1023,10 +1024,9 @@ window.__ModuleLoader__.load({
 					if (k.style.transform.includes("translate3d")) k.style.transition = "";
 				}, 2200);
 			};
-			// Roam restored (2026-08-16): the earlier grab-vs-walk fights are fixed
-			// at the source (shared roamState, release cooldown, small local steps,
-			// in-area clamping), so the 6s stroll timer is safe to run again.
-			const roamTimer = setInterval(walk, 6000);
+			// Roaming is off (2026-08-17): the 6s stroll timer no longer runs —
+			// the pet stays where it rests (default bottom-right). The walk
+			// machinery above stays for future re-enabling.
 			// Poke: when the pet drifts near a card, message, or the nest, give it a nudge.
 			const poked = new Set();
 			const pokeTimer = setInterval(() => {
@@ -1048,7 +1048,7 @@ window.__ModuleLoader__.load({
 					}
 				}
 			}, 800);
-			return () => { clearInterval(timer); clearInterval(roamTimer); clearInterval(pokeTimer); };
+			return () => { clearInterval(timer); clearInterval(pokeTimer); };
 		}, "ui-side-panel: bg rotation");
 
 		// Remove the inline todo strip from above the composer.

@@ -10,11 +10,9 @@ contextBridge.exposeInMainWorld('dshApp', {
   notifyTaskDone: (data) => ipcRenderer.send('dsh:task-done', data),
   /**
    * Subscribe to notifier deep-links: the main process forwards the clicked
-   * task's session id after focusing the main window. Returns an unsubscribe.
+   * task's session id after focusing the main window.
    */
   onOpenSession: (cb) => {
-    const listener = (_event, sessionId) => cb(sessionId)
-    ipcRenderer.on('dsh:open-session', listener)
-    return () => ipcRenderer.removeListener('dsh:open-session', listener)
+    ipcRenderer.on('dsh:open-session', (_event, sessionId) => cb(sessionId))
   },
 })
