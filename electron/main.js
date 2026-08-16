@@ -168,6 +168,9 @@ function ensureNotifier() {
     resizable: false,
     movable: true,
     skipTaskbar: true,
+    // Never steal focus: a click on the card must not leave the app stuck
+    // on the panel (Cmd+Tab would otherwise land here instead of the page).
+    focusable: false,
     alwaysOnTop: true,
     fullscreenable: false,
     webPreferences: {
@@ -255,10 +258,15 @@ function registerNotifierIpc() {
     }
   })
   ipcMain.on('dsh:notifier-open', (_event, id) => {
-    // 点击条目：把主窗口带到前台（后续可扩展为直接跳到对应会话）。
+    // 点击条目：收起通知窗、移除该条（视为已处理），把主窗口带到前台。
+    const index = doneTasks.findIndex(t => t.id === id)
+    if (index !== -1) doneTasks.splice(index, 1)
+    ensureNotifier().hide()
     if (mainWindow !== null && !mainWindow.isDestroyed()) {
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.show()
+      // macOS: 通知窗不参与焦点时应用可能未激活，先激活应用再聚焦主窗。
+      if (process.platform === 'darwin') app.focus({ steal: true })
       mainWindow.focus()
     }
   })
