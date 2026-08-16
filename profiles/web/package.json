@@ -4,7 +4,8 @@
   "dependencies": {
     "deepseek-pet": "github:keleus/deepseek-pet",
     "dsh-better-sidebar": "github:omdsh-dev/DSH-better-sidebar",
-    "dsh-session-doctor": "github:mayf3/dsh-session-doctor"
+    "dsh-session-doctor": "github:mayf3/dsh-session-doctor",
+    "@dsh-user/ui-side-panel": "file:../node_modules/@dsh-user/ui-side-panel"
   },
   "dsh": {
     "profile": {
@@ -13,7 +14,8 @@
         "@deepseek-ai/dsh-web-app",
         "deepseek-pet",
         "dsh-session-doctor",
-        "dsh-better-sidebar"
+        "dsh-better-sidebar",
+        "@dsh-user/ui-side-panel"
       ]
     }
   },
