@@ -917,12 +917,12 @@ window.__ModuleLoader__.load({
 					// A session that pauses to wait on the user is NOT finished:
 					// only a stop without a pending interaction counts as done.
 					if (wasRunning && !running && waiting === undefined) {
-						notify({ sessionId: id, sessionTitle: title, task: `会话完成：${title}`, at: Date.now() });
+						notify({ sessionId: id, sessionTitle: title, task: `会话完成：${title}`, at: Date.now(), kind: "done" });
 						petProgress.addXp(PET_XP_PER_SESSION, 1);
 					}
 					if (wasWaiting === undefined && waiting !== undefined) {
 						const label = WAIT_LABELS[waiting] ?? "等待操作";
-						notify({ sessionId: id, sessionTitle: title, task: `需要你处理：${title}（${label}）`, at: Date.now() });
+						notify({ sessionId: id, sessionTitle: title, task: `需要你处理：${title}（${label}）`, at: Date.now(), kind: "waiting" });
 					}
 				}
 			};

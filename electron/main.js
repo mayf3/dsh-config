@@ -6,9 +6,18 @@
 
 const { app, BrowserWindow, shell, dialog, nativeImage, ipcMain, screen } = require('electron')
 const path = require('path')
+const fs = require('fs')
 
 const DSH_URL = process.env.DSH_URL || 'http://127.0.0.1:3080'
-const ICON_PATH = path.join(__dirname, 'assets', 'favicon.png')
+// Dock/window icon: prefer the 1024px black-whale render, fall back to the
+// small web favicon when the packaged assets are missing.
+const ICON_PATH = (() => {
+  const assets = path.join(__dirname, 'assets')
+  for (const name of ['favicon-1024-black.png', 'favicon-1024.png', 'favicon.png']) {
+    if (fs.existsSync(path.join(assets, name))) return path.join(assets, name)
+  }
+  return path.join(assets, 'favicon.png')
+})()
 const PRELOAD_PATH = path.join(__dirname, 'preload.js')
 
 const NOTIFIER_WIDTH = 340
@@ -74,12 +83,12 @@ function notifierHtml() {
   return `<!doctype html>
 <html><head><meta charset="utf-8"><style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: transparent; font-family: -apple-system, "PingFang SC", sans-serif; }
+  html, body { background: transparent; font-family: -apple-system, "PingFang SC", sans-serif; height: 100%; }
   .card {
     background: rgba(250, 251, 254, 0.96);
     border: 1px solid rgba(60, 60, 67, 0.14);
     border-radius: 14px;
-    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+    height: 100%;
     overflow: hidden;
   }
   .head {
@@ -99,7 +108,17 @@ function notifierHtml() {
     display: flex; align-items: flex-start; gap: 8px;
     padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(60, 60, 67, 0.06);
   }
-  .item:hover { background: rgba(0, 122, 255, 0.06); }
+  /* Kind tints: completed tasks sit on light green, waiting tasks on light
+     yellow — the color, not the text, tells them apart. */
+  .item[data-kind="done"] { background: #e9f7ee; }
+  .item[data-kind="done"]:hover { background: #dcf2e4; }
+  .item[data-kind="waiting"] { background: #fcf4dc; }
+  .item[data-kind="waiting"]:hover { background: #f8ebc2; }
+  .item .mark {
+    flex: none; width: 8px; height: 8px; margin-top: 5px;
+    border-radius: 50%; background: #4cd07d;
+  }
+  .item[data-kind="waiting"] .mark { background: #f2b53c; }
   .item:last-child { border-bottom: none; }
   .item .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .item .task { font-size: 13px; font-weight: 500; color: #1d1d1f; }
@@ -137,7 +156,8 @@ function notifierHtml() {
         return
       }
       list.innerHTML = items.map((item) =>
-        '<div class="item" data-id="' + item.id + '">' +
+        '<div class="item" data-id="' + item.id + '" data-kind="' + (item.kind === 'waiting' ? 'waiting' : 'done') + '">' +
+          '<i class="mark"></i>' +
           '<div class="body" data-open="1">' +
             '<span class="task">' + escapeHtml(item.task) + '</span>' +
             '<span class="meta">' + escapeHtml(item.sessionTitle || '会话') + ' · ' + fmt(item.at) + '</span>' +
@@ -218,8 +238,8 @@ function refreshNotifier() {
       win.webContents.send('dsh:render', items)
     })
   }
-  const height = Math.min(NOTIFIER_MAX_HEIGHT, 60 + doneTasks.length * 58 + 4)
-  win.setSize(NOTIFIER_WIDTH, Math.max(140, height))
+  const height = Math.min(NOTIFIER_MAX_HEIGHT, 44 + doneTasks.length * 58)
+  win.setSize(NOTIFIER_WIDTH, Math.max(104, height))
   placeNotifier()
   win.showInactive()
 }
@@ -238,6 +258,7 @@ function addDoneTask(data) {
     sessionTitle: typeof data?.sessionTitle === 'string' ? data.sessionTitle : '',
     task,
     at: typeof data?.at === 'number' ? data.at : Date.now(),
+    kind: data?.kind === 'waiting' ? 'waiting' : 'done',
   })
   refreshNotifier()
 }
@@ -258,12 +279,12 @@ function registerNotifierIpc() {
     }
   })
   ipcMain.on('dsh:notifier-open', (_event, id) => {
-    // 点击条目：收起通知窗、移除该条（视为已处理），把主窗口带到前台，
-    // 并深链到对应会话（dsh:open-session 由页面插件打开该会话）。
+    // 点击条目：移除该条（视为已处理），面板保持常驻（其余条目仍可点击跳转），
+    // 把主窗口带到前台并深链到对应会话；全部点完后面板自动收起。
     const index = doneTasks.findIndex(t => t.id === id)
     const entry = index !== -1 ? doneTasks[index] : undefined
     if (entry !== undefined) doneTasks.splice(index, 1)
-    ensureNotifier().hide()
+    refreshNotifier()
     if (mainWindow !== null && !mainWindow.isDestroyed()) {
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.show()
