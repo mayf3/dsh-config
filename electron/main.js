@@ -96,13 +96,20 @@ function notifierHtml() {
   .head .clear:hover { background: rgba(60, 60, 67, 0.08); color: #1d1d1f; }
   .list { max-height: ${NOTIFIER_MAX_HEIGHT - 60}px; overflow: auto; }
   .item {
-    display: flex; flex-direction: column; gap: 2px;
+    display: flex; align-items: flex-start; gap: 8px;
     padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(60, 60, 67, 0.06);
   }
   .item:hover { background: rgba(0, 122, 255, 0.06); }
   .item:last-child { border-bottom: none; }
+  .item .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .item .task { font-size: 13px; font-weight: 500; color: #1d1d1f; }
   .item .meta { font-size: 11px; color: #8e8e93; }
+  .item .close {
+    flex: none; border: none; background: transparent; color: #b0b0b6;
+    width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+    font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  }
+  .item .close:hover { background: rgba(60, 60, 67, 0.12); color: #1d1d1f; }
   .empty { padding: 26px 14px; text-align: center; font-size: 12px; color: #8e8e93; }
 </style></head><body>
   <div class="card">
@@ -131,11 +138,17 @@ function notifierHtml() {
       }
       list.innerHTML = items.map((item) =>
         '<div class="item" data-id="' + item.id + '">' +
-          '<span class="task">' + escapeHtml(item.task) + '</span>' +
-          '<span class="meta">' + escapeHtml(item.sessionTitle || '会话') + ' · ' + fmt(item.at) + '</span>' +
+          '<div class="body" data-open="1">' +
+            '<span class="task">' + escapeHtml(item.task) + '</span>' +
+            '<span class="meta">' + escapeHtml(item.sessionTitle || '会话') + ' · ' + fmt(item.at) + '</span>' +
+          '</div>' +
+          '<button class="close" data-close="1" title="关闭这条">×</button>' +
         '</div>').join('')
-      for (const el of list.querySelectorAll('.item')) {
-        el.addEventListener('click', () => ipcRenderer.send('dsh:notifier-open', el.dataset.id))
+      for (const el of list.querySelectorAll('.item [data-open="1"]')) {
+        el.addEventListener('click', () => ipcRenderer.send('dsh:notifier-open', el.closest('.item').dataset.id))
+      }
+      for (const el of list.querySelectorAll('.item [data-close="1"]')) {
+        el.addEventListener('click', () => ipcRenderer.send('dsh:notifier-remove', el.closest('.item').dataset.id))
       }
     }
     ipcRenderer.on('dsh:render', (_e, items) => render(items))
@@ -233,6 +246,13 @@ function registerNotifierIpc() {
   ipcMain.on('dsh:notifier-clear', () => {
     doneTasks.length = 0
     refreshNotifier()
+  })
+  ipcMain.on('dsh:notifier-remove', (_event, id) => {
+    const index = doneTasks.findIndex(t => t.id === id)
+    if (index !== -1) {
+      doneTasks.splice(index, 1)
+      refreshNotifier()
+    }
   })
   ipcMain.on('dsh:notifier-open', (_event, id) => {
     // 点击条目：把主窗口带到前台（后续可扩展为直接跳到对应会话）。
