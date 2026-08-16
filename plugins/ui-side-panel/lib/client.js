@@ -756,6 +756,41 @@ window.__ModuleLoader__.load({
 				return dispose;
 			}, "ui-side-panel: better-sidebar tab");
 
+			// Task-done notifier: watch every session's todos and report newly
+			// completed tasks to the Electron shell (window.dshApp), which shows
+			// an always-on-top card in the top-right corner. The first pass only
+			// builds the baseline so already-completed history never re-fires.
+		ctx.effect(() => {
+			const list = ctx.get("sessions")?.list;
+			if (list === undefined) return () => {};
+			const notified = new Set();
+			let prev = new Map();
+			let baseline = false;
+			const check = () => {
+				const snapshot = list.getSnapshot();
+				for (const [id, row] of Object.entries(snapshot.byId)) {
+					const todos = Array.isArray(row?.projectionValues?.todos) ? row.projectionValues.todos : [];
+					const done = new Set(todos.filter(t => t.status === "completed").map(t => t.content));
+					const before = prev.get(id) ?? new Set();
+					if (baseline) {
+						for (const content of done) {
+							if (before.has(content) || notified.has(id + "\u0000" + content)) continue;
+							notified.add(id + "\u0000" + content);
+							const payload = { sessionId: id, sessionTitle: row.displayTitle, task: content, at: Date.now() };
+							if (typeof window !== "undefined" && typeof window.dshApp?.notifyTaskDone === "function") {
+								window.dshApp.notifyTaskDone(payload);
+							}
+						}
+					}
+					prev.set(id, done);
+				}
+			};
+			check();
+			baseline = true;
+			const off = list.subscribe(check);
+			return off;
+		}, "ui-side-panel: task-done notifier");
+
 			// Background rotation: cycle through the downloaded wallpapers.
 		ctx.effect(() => {
 			const images = ["/bg.png", "/chatgpt-1.png", "/chatgpt-2.png", "/chatgpt-3.png",
