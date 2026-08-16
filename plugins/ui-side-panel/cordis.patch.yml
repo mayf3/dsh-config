@@ -1,0 +1,7 @@
+# @dsh-user/ui-side-panel bundle patch: 把宿主半边（lib/index.js，/ui-side-panel/stats
+# 路由）挂进 profile 组合。由 package.json 的 dsh.bundle.patch 指向本文件，
+# 通过 dsh.profile.bundles 渠道随 dsh web 启动自动加载；浏览器半边由
+# dsh.client（exports["./client"]）经 web 客户端模块扫描独立接入。
+- insert:
+    - id: ui-side-panel
+      name: '@dsh-user/ui-side-panel'

@@ -61,7 +61,7 @@ window.__ModuleLoader__.load({
 .dsh-latency-val{flex:none;width:56px;text-align:right;font:var(--dsw-font-xxs-12);color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
 .dsh-goal-objective{min-width:0;font:var(--dsw-font-xs-13);line-height:18px;color:var(--dsw-alias-label-secondary);white-space:normal}.dsh-goal-phase{flex:none;padding:1px 7px;border-radius:999px;font:var(--dsw-font-xxs-strong-12);color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-2)}.dsh-pet-nest{flex:none;display:flex;align-items:center;justify-content:center;gap:8px;height:56px;margin:20px 20px 20px 12px;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-1);box-shadow:0 -4px 12px rgba(15,23,42,.1);transition:height .35s ease,border-color .2s ease,background .2s ease,color .2s ease}body[data-ds-dark-theme] .dsh-pet-nest{box-shadow:0 -4px 12px rgba(0,0,0,.4)}border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-tertiary);font:var(--dsw-font-xs-13);transition:border-color .2s ease,background .2s ease,color .2s ease}.dsh-pet-nest[data-hover=true]{border-color:var(--dsw-alias-state-business-primary);background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 10%,transparent);color:var(--dsw-alias-label-primary)}.dsh-pet-nest[data-docked=true]{border-style:solid;border-color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 8%,transparent)}.dsh-empty{padding:12px;font:var(--dsw-font-xs-13);color:var(--dsw-alias-label-tertiary)}
 .dsh-toggle-btn{display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);cursor:pointer}
-.dsh-toggle-btn:hover{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}/* Global soft blue-violet wash over the whole page. */body{--dsw-alias-bg-base:linear-gradient(rgba(244,246,250,.62),rgba(244,246,250,.62)),url('/bg.png') center / cover no-repeat fixed;--dsw-alias-bg-layer-1:rgba(248,250,253,.45);--dsw-alias-bg-layer-2:rgba(238,242,250,.5);--dsw-specific-sidebar-fill:rgba(233,240,252,.2)}/* ChatGPT-style: long user messages collapse to the bubble; click to expand. */.dsh-msg-bubble.dsh-msg-foldable{position:relative;max-height:84px;overflow:hidden;cursor:pointer;transition:max-height .25s ease}.dsh-msg-bubble.dsh-msg-foldable::after{content:'';position:absolute;left:0;right:0;bottom:0;height:40px;pointer-events:none;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--dsw-alias-bg-layer-1) 97%,transparent))}.dsh-msg-bubble.dsh-msg-foldable::before{content:'点击展开 ▾';position:absolute;right:8px;bottom:4px;z-index:1;padding:1px 7px;border-radius:6px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px;pointer-events:none}.dsh-msg-bubble.dsh-msg-foldable:hover::before{color:var(--dsw-alias-label-secondary)}.dsh-msg-bubble.dsh-msg-expanded{max-height:none;overflow:visible;cursor:default}.dsh-msg-bubble.dsh-msg-expanded::after,.dsh-msg-bubble.dsh-msg-expanded::before{display:none}/* Ambient light: slow-drifting colored glow blobs over the whole page. */.dsh-ambient{position:fixed;inset:0;pointer-events:none;overflow:hidden}.dsh-ambient i{position:absolute;border-radius:50%;filter:blur(90px);opacity:.14;will-change:transform;transition:opacity .6s ease}.dsh-ambient i:nth-child(1){width:540px;height:540px;left:-140px;top:-100px;background:#5b8def;animation:dsh-glow-a 26s ease-in-out infinite alternate}.dsh-ambient i:nth-child(2){width:480px;height:480px;right:-120px;top:8%;background:#8b5cf6;animation:dsh-glow-b 32s ease-in-out infinite alternate}.dsh-ambient i:nth-child(3){width:440px;height:440px;left:28%;bottom:-180px;background:#22d3ee;animation:dsh-glow-c 38s ease-in-out infinite alternate}@keyframes dsh-glow-a{to{transform:translate(70px,50px) scale(1.18)}}@keyframes dsh-glow-b{to{transform:translate(-60px,70px) scale(1.12)}}@keyframes dsh-glow-c{to{transform:translate(50px,-60px) scale(1.22)}}body[data-ds-dark-theme] .dsh-ambient i{opacity:.22}.dsh-poked{animation:dsh-poke .5s ease}@keyframes dsh-poke{0%{transform:translateX(0)}30%{transform:translateX(9px)}60%{transform:translateX(-6px)}100%{transform:translateX(0)}}@media (prefers-reduced-motion:reduce){.dsh-ambient i{animation:none}}body[data-ds-dark-theme]{--dsw-alias-bg-base:linear-gradient(rgba(12,14,20,.6),rgba(12,14,20,.6)),url('/bg.png') center / cover no-repeat fixed;--dsw-alias-bg-layer-1:rgba(25,29,42,.45);--dsw-alias-bg-layer-2:rgba(32,37,52,.5);--dsw-specific-sidebar-fill:rgba(18,24,38,.2)}/* Docked pet: horizontal layout inside the nest — pet left, speech right. */[data-dsh-live2d-root].dsh-pet-docked{display:flex;flex-direction:row;align-items:center;gap:6px;justify-items:initial;width:306px}[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-stage{order:1;flex:none;width:140px;height:140px}[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-character{width:140px;height:140px}[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-bubble{order:2;flex:1 1 auto;min-width:0;width:auto;margin:0;border-radius:12px;transform:none;animation:none}[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-tools,[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-sessions{display:none}/* 2026-08-16: lift the pet above the better-sidebar workbench (z-50) so it stays clickable. The pet's own z-index only counts inside the overlay stacking context (z-20), so the overlay container itself must rise above the workbench. */[data-shell-overlay]{z-index:60!important}[data-dsh-live2d-root]{z-index:60!important}`;
+.dsh-toggle-btn:hover{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}/* Global soft blue-violet wash over the whole page. */body{--dsw-alias-bg-base:linear-gradient(rgba(244,246,250,.62),rgba(244,246,250,.62)),url('/ui-side-panel/assets/bg.png'),url('/bg.png') center / cover no-repeat fixed;--dsw-alias-bg-layer-1:rgba(248,250,253,.45);--dsw-alias-bg-layer-2:rgba(238,242,250,.5);--dsw-specific-sidebar-fill:rgba(233,240,252,.2)}/* ChatGPT-style: long user messages collapse to the bubble; click to expand. */.dsh-msg-bubble.dsh-msg-foldable{position:relative;max-height:84px;overflow:hidden;cursor:pointer;transition:max-height .25s ease}.dsh-msg-bubble.dsh-msg-foldable::after{content:'';position:absolute;left:0;right:0;bottom:0;height:40px;pointer-events:none;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--dsw-alias-bg-layer-1) 97%,transparent))}.dsh-msg-bubble.dsh-msg-foldable::before{content:'点击展开 ▾';position:absolute;right:8px;bottom:4px;z-index:1;padding:1px 7px;border-radius:6px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px;pointer-events:none}.dsh-msg-bubble.dsh-msg-foldable:hover::before{color:var(--dsw-alias-label-secondary)}.dsh-msg-bubble.dsh-msg-expanded{max-height:none;overflow:visible;cursor:default}.dsh-msg-bubble.dsh-msg-expanded::after,.dsh-msg-bubble.dsh-msg-expanded::before{display:none}/* Ambient light: slow-drifting colored glow blobs over the whole page. */.dsh-ambient{position:fixed;inset:0;pointer-events:none;overflow:hidden}.dsh-ambient i{position:absolute;border-radius:50%;filter:blur(90px);opacity:.14;will-change:transform;transition:opacity .6s ease}.dsh-ambient i:nth-child(1){width:540px;height:540px;left:-140px;top:-100px;background:#5b8def;animation:dsh-glow-a 26s ease-in-out infinite alternate}.dsh-ambient i:nth-child(2){width:480px;height:480px;right:-120px;top:8%;background:#8b5cf6;animation:dsh-glow-b 32s ease-in-out infinite alternate}.dsh-ambient i:nth-child(3){width:440px;height:440px;left:28%;bottom:-180px;background:#22d3ee;animation:dsh-glow-c 38s ease-in-out infinite alternate}@keyframes dsh-glow-a{to{transform:translate(70px,50px) scale(1.18)}}@keyframes dsh-glow-b{to{transform:translate(-60px,70px) scale(1.12)}}@keyframes dsh-glow-c{to{transform:translate(50px,-60px) scale(1.22)}}body[data-ds-dark-theme] .dsh-ambient i{opacity:.22}.dsh-poked{animation:dsh-poke .5s ease}@keyframes dsh-poke{0%{transform:translateX(0)}30%{transform:translateX(9px)}60%{transform:translateX(-6px)}100%{transform:translateX(0)}}@media (prefers-reduced-motion:reduce){.dsh-ambient i{animation:none}}body[data-ds-dark-theme]{--dsw-alias-bg-base:linear-gradient(rgba(12,14,20,.6),rgba(12,14,20,.6)),url('/ui-side-panel/assets/bg.png'),url('/bg.png') center / cover no-repeat fixed;--dsw-alias-bg-layer-1:rgba(25,29,42,.45);--dsw-alias-bg-layer-2:rgba(32,37,52,.5);--dsw-specific-sidebar-fill:rgba(18,24,38,.2)}/* Docked pet: horizontal layout inside the nest — pet left, speech right. */[data-dsh-live2d-root].dsh-pet-docked{display:flex;flex-direction:row;align-items:center;gap:6px;justify-items:initial;width:306px}[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-stage{order:1;flex:none;width:140px;height:140px}[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-character{width:140px;height:140px}[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-bubble{order:2;flex:1 1 auto;min-width:0;width:auto;margin:0;border-radius:12px;transform:none;animation:none}[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-tools,[data-dsh-live2d-root].dsh-pet-docked .dsh-live2d-sessions{display:none}/* 2026-08-16: lift the pet above the better-sidebar workbench (z-50) so it stays clickable. The pet's own z-index only counts inside the overlay stacking context (z-20), so the overlay container itself must rise above the workbench. */[data-shell-overlay]{z-index:60!important}[data-dsh-live2d-root]{z-index:60!important}`;
 		const tagId = "@dsh-user/ui-side-panel/styles";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId) + "]") === null) {
 			const tag = document.createElement("style");
@@ -69,6 +69,18 @@ window.__ModuleLoader__.load({
 			tag.dataset.pluginCss = tagId;
 			tag.textContent = css;
 			document.head.appendChild(tag);
+		}
+
+		// Pet growth stylesheet, injected as its own tag so the base sheet
+		// above stays untouched.
+		const petCss = `.dsh-pet-card{display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px}.dsh-pet-level-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.dsh-pet-level-name{font:var(--dsw-font-xs-strong-13);color:var(--dsw-alias-label-primary)}.dsh-pet-level-badge{flex:none;padding:1px 7px;border-radius:999px;font:var(--dsw-font-xxs-strong-12);color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-bg-layer-2)}.dsh-pet-xp-bar{display:flex;height:4px;border-radius:2px;background:var(--dsw-alias-border-l1);overflow:hidden}.dsh-pet-xp-fill{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,var(--dsw-alias-state-business-primary),#a78bfa)}.dsh-pet-xp-label{font:var(--dsw-font-xxs-12);color:var(--dsw-alias-label-tertiary)}.dsh-pet-feed-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.dsh-pet-fish{font:var(--dsw-font-xs-13);color:var(--dsw-alias-label-secondary)}.dsh-pet-feed-btn{display:flex;align-items:center;gap:4px;height:24px;padding:0 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xs-13);cursor:pointer}.dsh-pet-feed-btn:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}.dsh-pet-feed-btn:disabled{opacity:.45;cursor:not-allowed}.dsh-pet-gain{font:var(--dsw-font-xxs-12);color:var(--dsw-alias-state-success-primary)}.dsh-pet-gain[data-levelup=true]{color:var(--dsw-alias-state-warn-primary)}`;
+		const petTagId = "@dsh-user/ui-side-panel/pet";
+		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(petTagId) + "]") === null) {
+			const petTag = document.createElement("style");
+			petTag.dataset.plugin = "@dsh-user/ui-side-panel";
+			petTag.dataset.pluginCss = petTagId;
+			petTag.textContent = petCss;
+			document.head.appendChild(petTag);
 		}
 
 		const TITLE_TODO = "任务清单";
@@ -349,6 +361,94 @@ window.__ModuleLoader__.load({
 		const ROAM_COOLDOWN = 60000;
 		const roamState = { enabled: true, suppressUntil: 0 };
 
+		// Pet growth: XP + fish economy, persisted in localStorage. XP comes
+		// from completed sessions (+10), petting the pet (+1, 10s cooldown)
+		// and feeding (+5, 30s cooldown); each completed session also earns
+		// one fish (cap 20). Levels follow PET_LEVELS thresholds:
+		// 幼鲸 → 伙伴 → 挚友 → 深海羁绊.
+		const PET_KEY = "dsh.pet.progress.v1";
+		const PET_LEVELS = [
+			{ name: "幼鲸", xp: 0 },
+			{ name: "伙伴", xp: 30 },
+			{ name: "挚友", xp: 80 },
+			{ name: "深海羁绊", xp: 150 },
+		];
+		const PET_FISH_MAX = 20;
+		const PET_XP_PER_SESSION = 10;
+		const PET_XP_PER_PAT = 1;
+		const PET_XP_PER_FEED = 5;
+		const PET_FEED_COOLDOWN = 30000;
+		const PET_PAT_COOLDOWN = 10000;
+		const petProgress = (() => {
+			let state = { xp: 0, fish: 0, lastPatAt: 0, lastFeedAt: 0, lastGain: null, lastLevelUp: null };
+			try {
+				const saved = JSON.parse(window.localStorage?.getItem(PET_KEY) || "null");
+				if (saved !== null && typeof saved === "object") {
+					state = {
+						xp: Math.max(0, Math.floor(Number(saved.xp) || 0)),
+						fish: Math.max(0, Math.min(PET_FISH_MAX, Math.floor(Number(saved.fish) || 0))),
+						lastPatAt: Number(saved.lastPatAt) || 0,
+						lastFeedAt: Number(saved.lastFeedAt) || 0,
+						lastGain: null,
+						lastLevelUp: null,
+					};
+				}
+			} catch {
+				// malformed storage: start fresh
+			}
+			const listeners = new Set();
+			let snapshot = state;
+			const save = () => {
+				try {
+					window.localStorage?.setItem(PET_KEY, JSON.stringify(state));
+				} catch {
+					// storage unavailable: keep the in-memory state
+				}
+			};
+			const emit = () => {
+				snapshot = { ...state };
+				save();
+				listeners.forEach((fn) => fn());
+			};
+			const levelIndex = (xp) => {
+				let i = 0;
+				while (i + 1 < PET_LEVELS.length && xp >= PET_LEVELS[i + 1].xp) i += 1;
+				return i;
+			};
+			return {
+				snapshot: () => snapshot,
+				subscribe: (fn) => {
+					listeners.add(fn);
+					return () => listeners.delete(fn);
+				},
+				levelIndex,
+				addXp(n, fish) {
+					const before = levelIndex(state.xp);
+					state.xp += n;
+					if (fish > 0) state.fish = Math.min(PET_FISH_MAX, state.fish + fish);
+					state.lastGain = { xp: n, fish, at: Date.now() };
+					const after = levelIndex(state.xp);
+					if (after > before) state.lastLevelUp = { name: PET_LEVELS[after].name, at: Date.now() };
+					emit();
+				},
+				pat() {
+					const now = Date.now();
+					if (now - state.lastPatAt < PET_PAT_COOLDOWN) return false;
+					state.lastPatAt = now;
+					this.addXp(PET_XP_PER_PAT, 0);
+					return true;
+				},
+				feed() {
+					const now = Date.now();
+					if (state.fish <= 0 || now - state.lastFeedAt < PET_FEED_COOLDOWN) return false;
+					state.fish -= 1;
+					state.lastFeedAt = now;
+					this.addXp(PET_XP_PER_FEED, 0);
+					return true;
+				},
+			};
+		})();
+
 		// Boot self-heal: a drag position that clearly falls outside the viewport
 		// (the pet would be invisible and unclickable) is reset to the default
 		// spot; ordinary positions are left untouched.
@@ -370,11 +470,61 @@ window.__ModuleLoader__.load({
 			const hasTodo = todos.length > 0;
 			const statsCard = React.createElement(StatsCard, { usage, stats, pressure, breakdown, durations });
 			const todoCard = hasTodo ? React.createElement(TodoCard, { todos }) : null;
-			const hasAny = goalCard !== null || hasTodo || statsCard !== null;
-			return hasAny
-				? React.createElement("div", { className: "dsh-side-body" }, goalCard, todoCard, statsCard)
-				: React.createElement("div", { className: "dsh-side-body" },
-					React.createElement("div", { className: "dsh-empty" }, "暂无任务与统计"));
+			// The growth card is always present, so the body never goes empty.
+			return React.createElement("div", { className: "dsh-side-body" },
+				goalCard, todoCard, statsCard,
+				React.createElement(PetCard));
+		}
+
+		// Pet growth card: level name, XP progress, fish stock and the feed
+		// button. Reads petProgress through useSyncExternalStore so gains from
+		// the notifier effect (completed sessions) re-render this card live.
+		function PetCard() {
+			const progress = React.useSyncExternalStore(
+				(cb) => petProgress.subscribe(cb),
+				() => petProgress.snapshot(),
+			);
+			const [collapsed, setCollapsed] = React.useState(false);
+			const idx = petProgress.levelIndex(progress.xp);
+			const level = PET_LEVELS[idx];
+			const next = PET_LEVELS[idx + 1];
+			const ratio = next === undefined ? 1 : (progress.xp - level.xp) / (next.xp - level.xp);
+			const now = Date.now();
+			const cooldownLeft = Math.max(0, Math.ceil((progress.lastFeedAt + PET_FEED_COOLDOWN - now) / 1000));
+			const canFeed = next !== undefined && progress.fish > 0 && cooldownLeft === 0;
+			const gainFresh = progress.lastGain !== null && now - progress.lastGain.at < 10000;
+			const levelFresh = progress.lastLevelUp !== null && now - progress.lastLevelUp.at < 15000;
+			return React.createElement("section", { className: "dsh-card", "aria-label": "宠物养成" },
+				React.createElement("button", {
+					type: "button",
+					className: "dsh-card-head",
+					"aria-expanded": !collapsed,
+					onClick: () => setCollapsed(v => !v),
+				},
+					React.createElement("span", { className: "dsh-card-lead" }, "🐋"),
+					React.createElement("span", { className: "dsh-card-title" }, "宠物养成"),
+					React.createElement("span", { className: "dsh-card-progress" }, `Lv.${idx + 1} ${level.name}`),
+					React.createElement("span", { className: "dsh-card-chevron" }, chevronIcon(collapsed))),
+				!collapsed && React.createElement("div", { className: "dsh-pet-card" },
+					React.createElement("div", { className: "dsh-pet-level-row" },
+						React.createElement("span", { className: "dsh-pet-level-name" }, `${level.name} · Lv.${idx + 1}`),
+						React.createElement("span", { className: "dsh-pet-level-badge" },
+							next === undefined ? "MAX" : `还差 ${next.xp - progress.xp} XP 升级`)),
+					React.createElement("div", { className: "dsh-pet-xp-bar" },
+						React.createElement("span", { className: "dsh-pet-xp-fill", style: { width: `${Math.round(Math.min(1, Math.max(0, ratio)) * 100)}%` } })),
+					React.createElement("div", { className: "dsh-pet-xp-label" },
+						next === undefined ? `已满级 · 累计 ${progress.xp} XP` : `${progress.xp} / ${next.xp} XP`),
+					React.createElement("div", { className: "dsh-pet-feed-row" },
+						React.createElement("span", { className: "dsh-pet-fish" }, `🐟 小鱼干 ×${progress.fish}`),
+						React.createElement("button", {
+							type: "button",
+							className: "dsh-pet-feed-btn",
+							disabled: !canFeed,
+							onClick: () => petProgress.feed(),
+						},
+							cooldownLeft > 0 ? `${cooldownLeft}s` : "喂食 +5 XP")),
+					(gainFresh || levelFresh) && React.createElement("div", { className: "dsh-pet-gain", "data-levelup": levelFresh || undefined },
+						levelFresh ? `🎉 升级：${progress.lastLevelUp.name}！` : `+${progress.lastGain.xp} XP${progress.lastGain.fish > 0 ? ` · +${progress.lastGain.fish} 🐟` : ""}`)));
 		}
 
 		function SidePanel(props) {
@@ -499,6 +649,8 @@ window.__ModuleLoader__.load({
 					const wasDown = dragRef.down;
 					const wasMoved = dragRef.moved;
 					dragRef.down = false;
+					// A press-and-release on the pet without dragging is a pat: +1 XP.
+					if (wasDown && !wasMoved) petProgress.pat();
 					// Only a release that follows a press ON the pet (dragRef.down)
 					// touches the roam cooldown; arbitrary page clicks elsewhere
 					// must never keep parking the pet (they used to refresh the
@@ -694,6 +846,8 @@ window.__ModuleLoader__.load({
 					const wasDown = dragRef.down;
 					const wasMoved = dragRef.moved;
 					dragRef.down = false;
+					// A press-and-release on the pet without dragging is a pat: +1 XP.
+					if (wasDown && !wasMoved) petProgress.pat();
 					setDockHover(false);
 					if (!wasDown || !wasMoved || !overlaps()) return;
 					const p = panelEl(), k = petEl();
@@ -809,6 +963,7 @@ window.__ModuleLoader__.load({
 					// only a stop without a pending interaction counts as done.
 					if (wasRunning && !running && waiting === undefined) {
 						notify({ sessionId: id, sessionTitle: title, task: `会话完成：${title}`, at: Date.now() });
+						petProgress.addXp(PET_XP_PER_SESSION, 1);
 					}
 					if (wasWaiting === undefined && waiting !== undefined) {
 						const label = WAIT_LABELS[waiting] ?? "等待操作";
@@ -824,16 +979,30 @@ window.__ModuleLoader__.load({
 
 			// Background rotation: cycle through the downloaded wallpapers.
 		ctx.effect(() => {
-			const images = ["/bg.png", "/chatgpt-1.png", "/chatgpt-2.png", "/chatgpt-3.png",
-				"/chatgpt-4.png", "/chatgpt-5.png", "/chatgpt-6.png", "/chatgpt-7.png"];
-			images.forEach(src => { const im = new Image(); im.src = src; });
+			const images = ["/ui-side-panel/assets/bg.png", "/ui-side-panel/assets/chatgpt-1.png",
+				"/ui-side-panel/assets/chatgpt-2.png", "/ui-side-panel/assets/chatgpt-3.png",
+				"/ui-side-panel/assets/chatgpt-4.png", "/ui-side-panel/assets/chatgpt-5.png",
+				"/ui-side-panel/assets/chatgpt-6.png", "/ui-side-panel/assets/chatgpt-7.png"];
+			const loaded = new Set();
+			images.forEach(src => {
+				const im = new Image();
+				im.onload = () => loaded.add(src);
+				im.src = src;
+			});
 			let idx = 1;
 			const rotate = () => {
-				const src = images[idx % images.length];
-				idx += 1;
-				const dark = document.body.getAttribute("data-ds-dark-theme") !== null;
-				const veil = dark ? "rgba(12,14,20,.6),rgba(12,14,20,.6)" : "rgba(244,246,250,.62),rgba(244,246,250,.62)";
-				document.body.style.setProperty("--dsw-alias-bg-base", `linear-gradient(${veil}),url('${src}') center / cover no-repeat fixed`);
+				// Only rotate onto a wallpaper that actually loaded; until the
+				// host assets route is up, the stylesheet default (with its dist
+				// fallback layer) keeps the page background intact.
+				for (let i = 0; i < images.length; i += 1) {
+					const src = images[idx % images.length];
+					idx += 1;
+					if (!loaded.has(src)) continue;
+					const dark = document.body.getAttribute("data-ds-dark-theme") !== null;
+					const veil = dark ? "rgba(12,14,20,.6),rgba(12,14,20,.6)" : "rgba(244,246,250,.62),rgba(244,246,250,.62)";
+					document.body.style.setProperty("--dsw-alias-bg-base", `linear-gradient(${veil}),url('${src}') center / cover no-repeat fixed`);
+					return;
+				}
 			};
 			const timer = setInterval(rotate, 60000);
 

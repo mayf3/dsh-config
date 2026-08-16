@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 一键部署 dsh 个性化配置到本机。
 # 用法: ./install.sh [--skip-bg] [--skip-electron]
-#   --skip-bg        跳过背景图部署（需要主仓库 apps/web/dist 存在）
+#   --skip-bg        保留兼容：背景图已随 ui-side-panel 插件分发，无实际作用
 #   --skip-electron  跳过 Electron 壳部署
 set -euo pipefail
 
@@ -27,12 +27,10 @@ mkdir -p "$DSH_HOME/.agent-presets"
 rm -rf "$DSH_HOME/.agent-presets/cordis-smart"
 cp -R "$REPO/agents/cordis-smart" "$DSH_HOME/.agent-presets/cordis-smart"
 
-if [[ "${1:-}" != "--skip-bg" && -d "$HARNESS/apps/web/dist" ]]; then
-  echo "==> 5/5 背景图 -> $HARNESS/apps/web/dist/"
-  cp "$REPO"/assets/*.png "$HARNESS/apps/web/dist/"
-else
-  echo "==> 5/5 跳过背景图"
-fi
+# 背景图已随 ui-side-panel 插件分发（plugins/ui-side-panel/assets/），
+# 由插件 host 侧 /ui-side-panel/assets 路由提供，不再部署到 apps/web/dist。
+# --skip-bg 参数保留兼容旧用法，现在无实际作用。
+echo "==> 5/5 背景图随 ui-side-panel 插件分发（无需 dist 部署）"
 
 if [[ "$*" != *"--skip-electron"* && -d "$HOME/dsh-app" ]]; then
   echo "==> 额外: Electron 壳 -> ~/dsh-app/"
