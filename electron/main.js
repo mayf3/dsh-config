@@ -166,6 +166,7 @@ function ensureNotifier() {
   // macOS 顶层置顶（覆盖其他应用的全屏内容之上）。
   notifier.setAlwaysOnTop(true, 'screen-saver')
   notifier.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+  notifierLoaded = false
   notifier.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(notifierHtml()))
   notifier.on('closed', () => { notifier = null })
   return notifier
@@ -181,6 +182,8 @@ function placeNotifier() {
   win.setPosition(Math.round(x), Math.round(y))
 }
 
+let notifierLoaded = false
+
 /** Re-render the notifier and size it to content; hide when empty. */
 function refreshNotifier() {
   const win = ensureNotifier()
@@ -189,9 +192,15 @@ function refreshNotifier() {
     return
   }
   const items = [...doneTasks].reverse()
-  win.webContents.once('did-finish-load', () => { win.webContents.send('dsh:render', items) })
-  if (win.isVisible()) {
+  if (notifierLoaded) {
     win.webContents.send('dsh:render', items)
+  } else {
+    // First ever task: the page is still loading, so queue the render until
+    // it finishes (a naive send here would open an empty card).
+    win.webContents.once('did-finish-load', () => {
+      notifierLoaded = true
+      win.webContents.send('dsh:render', items)
+    })
   }
   const height = Math.min(NOTIFIER_MAX_HEIGHT, 60 + doneTasks.length * 58 + 4)
   win.setSize(NOTIFIER_WIDTH, Math.max(140, height))

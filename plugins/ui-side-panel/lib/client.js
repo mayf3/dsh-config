@@ -805,7 +805,9 @@ window.__ModuleLoader__.load({
 					prev.set(id, { running, waiting });
 					if (!baseline) continue;
 					const title = row?.displayTitle ?? "会话";
-					if (wasRunning && !running) {
+					// A session that pauses to wait on the user is NOT finished:
+					// only a stop without a pending interaction counts as done.
+					if (wasRunning && !running && waiting === undefined) {
 						notify({ sessionId: id, sessionTitle: title, task: `会话完成：${title}`, at: Date.now() });
 					}
 					if (wasWaiting === undefined && waiting !== undefined) {
