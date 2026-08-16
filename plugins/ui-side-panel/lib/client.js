@@ -776,27 +776,41 @@ window.__ModuleLoader__.load({
 				return dispose;
 			}, "ui-side-panel: better-sidebar tab");
 
-			// Session-done notifier: watch every session's running flag and report
-			// sessions that finish running to the Electron shell (window.dshApp),
-			// which shows an always-on-top card in the top-right corner. The
-			// first pass only builds the baseline so already-finished sessions
-			// never re-fire.
+			// Session notifier: watch every session's running flag and pending
+			// interaction, reporting to the Electron shell (window.dshApp) which
+			// shows an always-on-top card in the top-right corner:
+			//   - a session that finishes running ("会话完成"),
+			//   - a session that starts waiting on the user ("需要你处理").
+			// The first pass only builds the baseline so already-finished or
+			// already-waiting sessions never re-fire.
 		ctx.effect(() => {
 			const list = ctx.get("sessions")?.list;
 			if (list === undefined) return () => {};
+			const WAIT_LABELS = { approval: "等待审批", "plan-review": "计划待审", question: "等待回答" };
 			const prev = new Map();
 			let baseline = false;
+			const notify = (payload) => {
+				if (typeof window !== "undefined" && typeof window.dshApp?.notifyTaskDone === "function") {
+					window.dshApp.notifyTaskDone(payload);
+				}
+			};
 			const check = () => {
 				const snapshot = list.getSnapshot();
 				for (const [id, row] of Object.entries(snapshot.byId)) {
 					const running = row?.running === true;
-					const wasRunning = prev.get(id) === true;
-					prev.set(id, running);
-					if (!baseline || !wasRunning || running) continue;
+					const waiting = row?.pendingInteraction;
+					const before = prev.get(id) ?? {};
+					const wasRunning = before.running === true;
+					const wasWaiting = before.waiting;
+					prev.set(id, { running, waiting });
+					if (!baseline) continue;
 					const title = row?.displayTitle ?? "会话";
-					const payload = { sessionId: id, sessionTitle: title, task: `会话完成：${title}`, at: Date.now() };
-					if (typeof window !== "undefined" && typeof window.dshApp?.notifyTaskDone === "function") {
-						window.dshApp.notifyTaskDone(payload);
+					if (wasRunning && !running) {
+						notify({ sessionId: id, sessionTitle: title, task: `会话完成：${title}`, at: Date.now() });
+					}
+					if (wasWaiting === undefined && waiting !== undefined) {
+						const label = WAIT_LABELS[waiting] ?? "等待操作";
+						notify({ sessionId: id, sessionTitle: title, task: `需要你处理：${title}（${label}）`, at: Date.now() });
 					}
 				}
 			};
@@ -804,7 +818,7 @@ window.__ModuleLoader__.load({
 			baseline = true;
 			const off = list.subscribe(check);
 			return off;
-		}, "ui-side-panel: session-done notifier");
+		}, "ui-side-panel: session notifier");
 
 			// Background rotation: cycle through the downloaded wallpapers.
 		ctx.effect(() => {
