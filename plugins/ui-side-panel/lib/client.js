@@ -349,13 +349,12 @@ window.__ModuleLoader__.load({
 		const ROAM_COOLDOWN = 60000;
 		const roamState = { enabled: true, suppressUntil: 0 };
 
-		// 2026-08-16 self-heal: the retired roam logic could persist a drag
-		// position that pushes the pet outside the overlay container (its
-		// stacking/click region), making it invisible and unclickable. Reset
-		// such positions on boot so the pet returns to its default spot.
+		// Boot self-heal: a drag position that clearly falls outside the viewport
+		// (the pet would be invisible and unclickable) is reset to the default
+		// spot; ordinary positions are left untouched.
 		try {
 			const petPos = JSON.parse(window.localStorage?.getItem("deepseek-pet:position") || "null");
-			if (petPos !== null && (Math.abs(petPos.x) > 200 || Math.abs(petPos.y) > 400)) {
+			if (petPos !== null && (Math.abs(petPos.x) > window.innerWidth * 2 || Math.abs(petPos.y) > window.innerHeight * 2)) {
 				window.localStorage?.removeItem("deepseek-pet:position");
 			}
 		} catch { /* malformed storage is ignored */ }
@@ -500,10 +499,14 @@ window.__ModuleLoader__.load({
 					const wasDown = dragRef.down;
 					const wasMoved = dragRef.moved;
 					dragRef.down = false;
-					// Releasing the pet (click or drag) parks it for a while: it
-					// stays where it was put instead of wandering off at once.
-					roamState.enabled = true;
-					roamState.suppressUntil = Date.now() + ROAM_COOLDOWN;
+					// Only a release that follows a press ON the pet (dragRef.down)
+					// touches the roam cooldown; arbitrary page clicks elsewhere
+					// must never keep parking the pet (they used to refresh the
+					// 60s cooldown forever while the user was active).
+					if (wasDown) {
+						roamState.enabled = true;
+						roamState.suppressUntil = Date.now() + ROAM_COOLDOWN;
+					}
 					setDockHover(false);
 					if (!wasDown) return;
 					// Expanding/collapsing scales the pet around its bottom-right
@@ -753,6 +756,23 @@ window.__ModuleLoader__.load({
 					single: true,
 					component: SidePanelTab,
 				});
+				// Fresh sessions default to the task panel instead of Explorer:
+				// only when the pane is still the untouched single-Explorer-tab
+				// state (the user never picked anything else) do we activate our
+				// own tab. Manual selections are left alone.
+				try {
+					const snap = ctx.betterSidebar.getSnapshot?.();
+					const splits = snap?.splits;
+					if (splits !== null && typeof splits === "object" && splits.kind === "leaf") {
+						const tabs = Array.isArray(splits.tabs) ? splits.tabs : [];
+						const active = tabs.find(t => t !== null && t.id === splits.active);
+						if (tabs.length === 1 && active?.type === "explorer") {
+							ctx.betterSidebar.openTab?.({ id: "ui-side-panel", type: "ui-side-panel", title: TOGGLE_LABEL });
+						}
+					}
+				} catch {
+					// the registry may not expose getSnapshot/openTab in older versions
+				}
 				return dispose;
 			}, "ui-side-panel: better-sidebar tab");
 
@@ -803,15 +823,30 @@ window.__ModuleLoader__.load({
 
 			// Pet roam: wander the content area, nudging nearby elements.
 			const petEl = () => document.querySelector("[data-dsh-live2d-root]");
+			const visiblePanel = () => {
+				for (const p of document.querySelectorAll(".dsh-side-panel")) {
+					if (p.getBoundingClientRect().width > 0) return p;
+				}
+				return null;
+			};
 			const roamArea = () => {
-				const panel = document.querySelector(".dsh-side-panel");
-				const pr = panel === null ? null : panel.getBoundingClientRect();
-				const right = pr === null ? window.innerWidth - 80 : pr.left - 40;
+				// Roam the whole content area INCLUDING the right sidebar column,
+				// so the pet can wander onto the panel and near its nest. A
+				// hidden (zero-width) panel must not collapse the area to nothing.
+				const pr = visiblePanel()?.getBoundingClientRect();
+				const right = pr === undefined || pr.width <= 0 ? window.innerWidth - 80 : pr.right - 20;
 				return { left: 300, right, top: 90, bottom: window.innerHeight - 220 };
 			};
 			const walk = () => {
 				const k = petEl();
+				// Watchdog: a grab whose pointerup was lost can leave roaming
+				// disabled forever. Once the cooldown has expired and the pet is
+				// not docked, recover automatically instead of staying parked.
+				if (k !== null && !roamState.enabled && Date.now() >= roamState.suppressUntil && !k.classList.contains("dsh-pet-docked")) {
+					roamState.enabled = true;
+				}
 				if (k === null || !roamState.enabled || Date.now() < roamState.suppressUntil || k.classList.contains("dsh-pet-docked")) return;
+
 				const kr = k.getBoundingClientRect();
 				const area = roamArea();
 				if (area.right <= area.left) return;
@@ -837,9 +872,10 @@ window.__ModuleLoader__.load({
 					if (k.style.transform.includes("translate3d")) k.style.transition = "";
 				}, 2200);
 			};
-			// Roam disabled (2026-08-16): the 6s walk timer fought the pet's own
-			// drag logic and repeatedly pushed it off-screen, making it unclickable.
-			const roamTimer = 0;
+			// Roam restored (2026-08-16): the earlier grab-vs-walk fights are fixed
+			// at the source (shared roamState, release cooldown, small local steps,
+			// in-area clamping), so the 6s stroll timer is safe to run again.
+			const roamTimer = setInterval(walk, 6000);
 			// Poke: when the pet drifts near a card, message, or the nest, give it a nudge.
 			const poked = new Set();
 			const pokeTimer = setInterval(() => {
