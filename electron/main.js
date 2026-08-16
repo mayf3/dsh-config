@@ -209,12 +209,18 @@ function refreshNotifier() {
 }
 
 function addDoneTask(data) {
+  const sessionId = typeof data?.sessionId === 'string' ? data.sessionId : ''
+  const task = typeof data?.task === 'string' && data.task !== '' ? data.task : '任务完成'
+  // Dedupe: the same session + task already on the card is not added again,
+  // so an agent finishing every turn never floods the card with the same
+  // title. Clearing the card resets the set, so a later finish notifies again.
+  if (doneTasks.some(t => t.sessionId === sessionId && t.task === task)) return
   const id = 't' + Date.now() + '-' + Math.random().toString(36).slice(2, 7)
   doneTasks.push({
     id,
-    sessionId: typeof data?.sessionId === 'string' ? data.sessionId : '',
+    sessionId,
     sessionTitle: typeof data?.sessionTitle === 'string' ? data.sessionTitle : '',
-    task: typeof data?.task === 'string' && data.task !== '' ? data.task : '任务完成',
+    task,
     at: typeof data?.at === 'number' ? data.at : Date.now(),
   })
   refreshNotifier()
