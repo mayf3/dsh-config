@@ -125,8 +125,8 @@ function notifierHtml() {
   .item .meta { font-size: 11px; color: #8e8e93; }
   .item .close {
     flex: none; border: none; background: transparent; color: #b0b0b6;
-    width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
-    font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 24px; margin: -2px -4px 0 0; border-radius: 50%; cursor: pointer;
+    font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center;
   }
   .item .close:hover { background: rgba(60, 60, 67, 0.12); color: #1d1d1f; }
   .empty { padding: 26px 14px; text-align: center; font-size: 12px; color: #8e8e93; }
@@ -165,10 +165,18 @@ function notifierHtml() {
           '<button class="close" data-close="1" title="关闭这条">×</button>' +
         '</div>').join('')
       for (const el of list.querySelectorAll('.item [data-open="1"]')) {
-        el.addEventListener('click', () => ipcRenderer.send('dsh:notifier-open', el.closest('.item').dataset.id))
+        el.addEventListener('click', (e) => {
+          // Never let a body click leak into a sibling trigger.
+          e.stopPropagation()
+          ipcRenderer.send('dsh:notifier-open', el.closest('.item').dataset.id)
+        })
       }
       for (const el of list.querySelectorAll('.item [data-close="1"]')) {
-        el.addEventListener('click', () => ipcRenderer.send('dsh:notifier-remove', el.closest('.item').dataset.id))
+        el.addEventListener('click', (e) => {
+          // Close is dismiss-only: remove the entry, never jump to it.
+          e.stopPropagation()
+          ipcRenderer.send('dsh:notifier-remove', el.closest('.item').dataset.id)
+        })
       }
     }
     ipcRenderer.on('dsh:render', (_e, items) => render(items))
