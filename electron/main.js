@@ -292,7 +292,8 @@ function registerNotifierIpc() {
     const index = doneTasks.findIndex(t => t.id === id)
     if (index !== -1) {
       doneTasks.splice(index, 1)
-      refreshNotifier()
+      // Dismissing the final entry has the same in-place empty state as Clear.
+      refreshNotifier({ keepEmptyVisible: doneTasks.length === 0 })
     }
   })
   ipcMain.on('dsh:notifier-open', (_event, id) => {
