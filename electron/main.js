@@ -180,7 +180,13 @@ function notifierHtml() {
       }
     }
     ipcRenderer.on('dsh:render', (_e, items) => render(items))
-    document.getElementById('clear').addEventListener('click', () => ipcRenderer.send('dsh:notifier-clear'))
+    document.getElementById('clear').addEventListener('click', (event) => {
+      event.stopPropagation()
+      // Clear the visible card immediately. The main process then commits the
+      // same empty list without hiding this window or activating the main app.
+      render([])
+      ipcRenderer.send('dsh:notifier-clear')
+    })
   </script>
 </body></html>`
 }
@@ -228,10 +234,11 @@ function placeNotifier() {
 
 let notifierLoaded = false
 
-/** Re-render the notifier and size it to content; hide when empty. */
-function refreshNotifier() {
+/** Re-render the notifier and size it to content; hide ordinary empty states. */
+function refreshNotifier(options = {}) {
   const win = ensureNotifier()
-  if (doneTasks.length === 0) {
+  const keepEmptyVisible = options.keepEmptyVisible === true
+  if (doneTasks.length === 0 && !keepEmptyVisible) {
     win.hide()
     return
   }
@@ -277,7 +284,9 @@ function registerNotifierIpc() {
   })
   ipcMain.on('dsh:notifier-clear', () => {
     doneTasks.length = 0
-    refreshNotifier()
+    // Keep the emptied card in place. Hiding the clicked auxiliary window can
+    // return macOS to the Electron main window, which feels like navigation.
+    refreshNotifier({ keepEmptyVisible: true })
   })
   ipcMain.on('dsh:notifier-remove', (_event, id) => {
     const index = doneTasks.findIndex(t => t.id === id)
