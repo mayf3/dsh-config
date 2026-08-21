@@ -98,11 +98,13 @@ function notifierHtml() {
   }
   .head .dot { width: 9px; height: 9px; border-radius: 50%; background: #34c759; flex: none; }
   .head .title { font-size: 13px; font-weight: 600; color: #1d1d1f; flex: 1; }
-  .head .clear {
+  .head .clear, .head .dismiss {
     border: none; background: transparent; color: #8e8e93;
-    font-size: 12px; cursor: pointer; padding: 2px 6px; border-radius: 6px;
+    cursor: pointer; padding: 2px 6px; border-radius: 6px;
   }
-  .head .clear:hover { background: rgba(60, 60, 67, 0.08); color: #1d1d1f; }
+  .head .clear { font-size: 12px; }
+  .head .dismiss { font-size: 16px; line-height: 1; }
+  .head .clear:hover, .head .dismiss:hover { background: rgba(60, 60, 67, 0.08); color: #1d1d1f; }
   .list { max-height: ${NOTIFIER_MAX_HEIGHT - 60}px; overflow: auto; }
   .item {
     display: flex; align-items: flex-start; gap: 8px;
@@ -136,6 +138,7 @@ function notifierHtml() {
       <span class="dot"></span>
       <span class="title">任务完成</span>
       <button class="clear" id="clear">清空</button>
+      <button class="dismiss" id="dismiss" title="关闭通知" aria-label="关闭通知">×</button>
     </div>
     <div class="list" id="list"></div>
   </div>
@@ -182,10 +185,12 @@ function notifierHtml() {
     ipcRenderer.on('dsh:render', (_e, items) => render(items))
     document.getElementById('clear').addEventListener('click', (event) => {
       event.stopPropagation()
-      // Clear the visible card immediately. The main process then commits the
-      // same empty list without hiding this window or activating the main app.
       render([])
       ipcRenderer.send('dsh:notifier-clear')
+    })
+    document.getElementById('dismiss').addEventListener('click', (event) => {
+      event.stopPropagation()
+      ipcRenderer.send('dsh:notifier-hide')
     })
   </script>
 </body></html>`
@@ -234,11 +239,10 @@ function placeNotifier() {
 
 let notifierLoaded = false
 
-/** Re-render the notifier and size it to content; hide ordinary empty states. */
-function refreshNotifier(options = {}) {
+/** Re-render the notifier and size it to content; hide empty states. */
+function refreshNotifier() {
   const win = ensureNotifier()
-  const keepEmptyVisible = options.keepEmptyVisible === true
-  if (doneTasks.length === 0 && !keepEmptyVisible) {
+  if (doneTasks.length === 0) {
     win.hide()
     return
   }
@@ -284,16 +288,16 @@ function registerNotifierIpc() {
   })
   ipcMain.on('dsh:notifier-clear', () => {
     doneTasks.length = 0
-    // Keep the emptied card in place. Hiding the clicked auxiliary window can
-    // return macOS to the Electron main window, which feels like navigation.
-    refreshNotifier({ keepEmptyVisible: true })
+    refreshNotifier()
+  })
+  ipcMain.on('dsh:notifier-hide', () => {
+    if (notifier !== null && !notifier.isDestroyed()) notifier.hide()
   })
   ipcMain.on('dsh:notifier-remove', (_event, id) => {
     const index = doneTasks.findIndex(t => t.id === id)
     if (index !== -1) {
       doneTasks.splice(index, 1)
-      // Dismissing the final entry has the same in-place empty state as Clear.
-      refreshNotifier({ keepEmptyVisible: doneTasks.length === 0 })
+      refreshNotifier()
     }
   })
   ipcMain.on('dsh:notifier-open', (_event, id) => {
